@@ -5,13 +5,20 @@
  * license. For full terms see the included COPYING file.
 */
 
-#ifndef NANOMSGPP_MESSAGE_HPP_INCLUDED
-#define NANOMSGPP_MESSAGE_HPP_INCLUDED
+#ifndef NANOMSGPP_EXCEPTION_HPP_INCLUDED
+#define NANOMSGPP_EXCEPTION_HPP_INCLUDED
 
 namespace nanomsgpp {
 
-class message {
+class exception : public std::exception {
+	int _err;
 
+public:
+	exception();
+
+	virtual const char *what() const throw();
+
+	int nn_error() const;
 };
 
 }

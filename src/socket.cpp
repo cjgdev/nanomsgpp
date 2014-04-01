@@ -3,17 +3,9 @@
  *
  * This file is a part of libnanomsgpp, distributed under the MIT
  * license. For full terms see the included COPYING file.
-*/
+ */
 
-#ifndef NANOMSGPP_MESSAGE_HPP_INCLUDED
-#define NANOMSGPP_MESSAGE_HPP_INCLUDED
+#include "nanomsgpp/socket.hpp"
 
-namespace nanomsgpp {
-
-class message {
-
-};
-
-}
-
-#endif
+using namespace nanomsgpp;
+ 

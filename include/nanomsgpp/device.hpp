@@ -5,13 +5,14 @@
  * license. For full terms see the included COPYING file.
 */
 
-#ifndef NANOMSGPP_MESSAGE_HPP_INCLUDED
-#define NANOMSGPP_MESSAGE_HPP_INCLUDED
+#ifndef NANOMSGPP_DEVICE_HPP_INCLUDED
+#define NANOMSGPP_DEVICE_HPP_INCLUDED
 
 namespace nanomsgpp {
 
-class message {
-
+class device {
+public:
+	device(socket s1, socket s2);
 };
 
 }
