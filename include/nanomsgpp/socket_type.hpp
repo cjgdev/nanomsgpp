@@ -12,7 +12,7 @@
 
 namespace nanomsgpp {
 
-enum class socket_option {
+enum class socket_type {
 	/**
 	 * Socket for communication with exactly one peer. Each party can send 
 	 * messages at any time. If the peer is not available or send buffer is full 
