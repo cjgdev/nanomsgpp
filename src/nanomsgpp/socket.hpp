@@ -23,55 +23,67 @@
 #ifndef NANOMSGPP_SOCKET_HPP_INCLUDED
 #define NANOMSGPP_SOCKET_HPP_INCLUDED
 
+#ifndef NANOMSGPP_SOCKET_TYPE_HPP_INCLUDED
+#	include "socket_type.hpp"
+#endif
+#ifndef NANOMSGPP_SOCKET_OPTION_HPP_INCLUDED
+#	include "socket_option.hpp"
+#endif
+#ifndef NANOMSGPP_MESSAGE_HPP_INCLUDED
+#	include "message.hpp"
+#endif
+
 #include <iostream>
+#include <map>
+#include <memory>
 #include <string>
 
 namespace nanomsgpp {
 
-class socket {
-	int                        d_socket;
-	socket_type                d_type;
-	std::map<std::string, int> d_endpoints;
+	class socket {
+		int                        d_socket;
+		socket_type                d_type;
+		std::map<std::string, int> d_endpoints;
 
-public:
-	socket() = delete;
+	public:
+		socket() = delete;
 
-	socket(const socket &other) = delete;
+		socket(const socket &other) = delete;
 
-	socket(socket &&other) = default;
+		socket(socket &&other) = default;
 
-	socket(socket_type type);
+		socket(socket_type type);
 
-	~socket() = default;
+		~socket() = default;
 
-	socket& operator=(const socket &other) = delete;
+		socket& operator=(const socket &other) = delete;
 
-	socket& operator=(socket &&other) = default;
+		socket& operator=(socket &&other) = default;
 
-	void send(message &msg, bool dont_wait = true);
+		void send(message &msg, bool dont_wait = true);
 
-	void send_raw(const void *buf, size_t len, int flags);
+		void send_raw(const void *buf, size_t len, int flags);
 
-	void operator<<(message &msg);
+		void operator<<(message &msg);
 
-	message receive(bool dont_wait = true);
+		message receive(bool dont_wait = true);
 
-	int receive_raw(void *buf, size_t len, int flags);
+		int receive_raw(void *buf, size_t len, int flags);
 
-	message operator>>();
+		socket& operator>>(std::unique_ptr<message> &m);
 
-	void set_option(socket_option opt, int val);
+		void set_option(socket_option opt, int val);
 
-	void set_option(socket_option opt, const std::string &val);
+		void set_option(socket_option opt, const std::string &val);
 
-	void set_option_raw(int level, int option, const void *val, size_t len);
+		void set_option_raw(int level, int option, const void *val, size_t len);
 
-	void bind(const std::string &addr);
+		void bind(const std::string &addr);
 
-	void connect(const std::string &addr);
+		void connect(const std::string &addr);
 
-	void shutdown(const std::string &addr);
-};
+		void shutdown(const std::string &addr);
+	};
 
 }
 

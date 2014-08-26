@@ -27,27 +27,27 @@
 
 namespace nanomsgpp {
 
-class message {
-	std::ostream d_stream;
-public:
-	message() = default;
+	class message {
+		std::ostream d_stream;
+	public:
+		message() = default;
 
-	message(const message &other) = default;
+		message(const message &other) = default;
 
-	message(message &&other) = default;
+		message(message &&other) = default;
 
-	~message() = default;
+		~message() = default;
 
-	message& operator=(const message &other) = default;
+		message& operator=(const message &other) = default;
 
-	message& operator=(message &&other) = default;
+		message& operator=(message &&other) = default;
 
-	template <typename T>
-	message& operator<<(const T& t) {
-		d_stream << t;
-		return (*this);
-	}
-};
+		template <typename T>
+		message& operator<<(const T& t) {
+			d_stream << t;
+			return (*this);
+		}
+	};
 
 }
 

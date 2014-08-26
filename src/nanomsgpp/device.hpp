@@ -25,10 +25,9 @@
 
 namespace nanomsgpp {
 
-class device {
-public:
-	device(socket s1, socket s2);
-};
+	class device {
+	public:
+	};
 
 }
 

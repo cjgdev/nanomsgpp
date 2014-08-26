@@ -23,18 +23,46 @@
 #ifndef NANOMSGPP_EXCEPTION_HPP_INCLUDED
 #define NANOMSGPP_EXCEPTION_HPP_INCLUDED
 
+#include <nanomsg/nn.h>
+
+#include <stdexcept>
+#include <string>
+
 namespace nanomsgpp {
 
-class exception : public std::exception {
-	int _err;
+	class exception : public std::runtime_error {
+	public:
+		exception(std::string const& message)
+			: std::runtime_error(message) {}
+	};
 
-public:
-	exception();
+	class internal_exception : public exception {
+		int         d_error;
+		std::string d_reason;
+	public:
+		// Default constructor.
+		internal_exception()
+			: exception(nn_strerror(nn_errno()))
+			, d_error(nn_errno())
+			, d_reason(nn_strerror(nn_errno())) {}
 
-	virtual const char *what() const throw();
+		// Constructor.
+		internal_exception(const std::string& message)
+			: exception(message)
+			, d_error(nn_errno())
+			, d_reason(nn_strerror(nn_errno())) {}
 
-	int nn_error() const;
-};
+		// Destructor.
+		~internal_exception() throw() {}
+
+		// MANIPULATORS
+
+		// Get the error code associated with this exception.
+		int error() const { return d_error; }
+
+		// Get the reason string describing this exception.
+		std::string const& reason() const { return d_reason; }
+	};
 
 }
 
