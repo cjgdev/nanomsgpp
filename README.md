@@ -1,34 +1,34 @@
-libnanomsgpp - C++ bindings for nanomsg
-=======================================
+# riemannpp (C++)
 
-`libnanomsgpp` is a portable, pure C++ wrapper around nanomsg.
+## Introduction
 
-`libnanomsgpp` is licensed under the MIT license. Please see
-the [separate license](COPYING) for more information.
+C++ client library for [nanomsg](https://github.com/nanomsg/nanomsg).
 
-* Website: [libnanomsgpp.github.com](http://libnanomsgpp.github.com)
-* StackOverflow Tag: [libnanomsgpp](http://stackoverflow.com/questions/tagged/libnanomsgpp)
-* Issues: [GitHub Issues](https://github.com/libnanomsgpp/libnanomsgpp/issues) (Right here!)
+## Installation
 
-What It Can Do
-==============
+The library uses autotools. Use the following commands to build and install libnanomsgpp:
 
-Building libnanomsgpp - Using CMake
-===================================
+```bash
+$ git clone git://github.com/bigdatadev/libnanomsgpp.git
+$ cd libnanomsgpp
+$ ./autogen.sh
+$ ./configure && make && make check && make install
+```
 
-`libnanomsgpp` builds cleanly on most platforms without any external dependencies.
+## Contributing
 
-Compiler and linker options
----------------------------
+Just send me a pull request. Please take a look at the project issues and see how you can help. Here are some tips:
+* please add more tests.
+* please check your syntax.
 
-CMake lets you specify a few variables to control the behavior of the
-compiler and linker. These flags are rarely used but can be useful for
-64-bit to 32-bit cross-compilation.
+## Author
 
-- `CMAKE_C_FLAGS`: Set your own compiler flags
-- `CMAKE_FIND_ROOT_PATH`: Override the search path for libraries
+Christopher Gilbert
 
-License
-=======
+* Web: [http://cjgilbert.me](http://cjgilbert.me)
+* Twitter: [@bigdatadev](https://twitter.com/bigdatadev)
+* Linkedin: [/in/christophergilbert](https://www.linkedin.com/in/christophergilbert)
 
-`libnanomsgpp` is licensed under the MIT license.
+## Copyright
+
+See [LICENSE](LICENSE) document
