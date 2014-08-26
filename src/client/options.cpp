@@ -37,14 +37,51 @@ using namespace std;
 #define HAVE_JSON 0
 
 bpo::options_description
-connection_options()
+socket_options()
 {
-	boost::program_options::options_description options("Connection Options");
+	boost::program_options::options_description options("Socket Options");
 	options.add_options()
-		("bind,b", bpo::value<std::vector<std::string>>(), "bind to specified endpoint")
+		("bind,b",    bpo::value<std::vector<std::string>>(), "bind to specified endpoint")
 		("connect,c", bpo::value<std::vector<std::string>>(), "connect to specified endpoint")
-		("verbose,v", "display output sent over socket to stderr")
-		;
+		("recv-timeout", "timeout for receiving a message")
+		("send-timeout", "timeout for sending a message")
+	;
+	return options;
+}
+
+bpo::options_description
+sub_socket_options()
+{
+	boost::program_options::options_description options("SUB Socket Options");
+	options.add_options()
+		("subscribe", "subscribe to a topic. note: socket will be subscribed to everything if no topics are specified")
+	;
+	return options;
+}
+
+bpo::options_description
+input_options()
+{
+	boost::program_options::options_description options("Input Options");
+	options.add_options()
+		("format",   "use echo format")
+		("raw",      "dump message as is")
+		("ascii,A",  "print ascii part of message delimeted by newline")
+		("quoted,Q", "print each message on separate line in double quotes with C-like character escaping")
+	;
+	return options;
+}
+
+bpo::options_description
+output_options()
+{
+	boost::program_options::options_description options("Output Options");
+	options.add_options()
+		("interval,i", "send message (or request) every number of seconds")
+		("delay,d",    "wait for number of seconds before sending message")
+		("data,D",     "send data to the socket and quit")
+		("file,F",     "same as --data but get data from file")
+	;
 	return options;
 }
 
@@ -53,8 +90,9 @@ miscellaneous_options()
 {
 	bpo::options_description options("Miscellaneous Options");
 	options.add_options()
-		("version", "display version")
-		("help,?",  "show this help page")
+		("verbose,v", "increase verbosity")
+		("version",   "display version")
+		("help,?",    "show this help page")
 	;
 	return options;
 }
@@ -63,14 +101,16 @@ options
 process_command_line(int argc, char const* argv[]) {
 	bpo::positional_options_description arguments;
 	arguments.add("type", 1);
-	arguments.add("endpoint", 1);
 
 	bpo::options_description all;
 	all.add_options()
 		("type", "nanomsg socket type")
-		;
+	;
 	all.add(miscellaneous_options());
-	all.add(connection_options());
+	all.add(socket_options());
+	all.add(sub_socket_options());
+	all.add(input_options());
+	all.add(output_options());
 
 	bpo::variables_map vm;
 	options ops;
@@ -88,43 +128,49 @@ process_command_line(int argc, char const* argv[]) {
 		ops.show_usage = true;
 	}
 
-	if ((0 == vm.count("command")) || vm.count("help")) {
-		ops.show_usage = true;
-	} if (vm.count("command") && (vm["command"].as<string>() == string("query")) && (0 == vm.count("query"))) {
+	if ((0 == vm.count("type")) || vm.count("help") || (0 == vm.count("connect") && 0 == vm.count("bind"))) {
 		ops.show_usage = true;
 	}
 
 	ops.show_version = (vm.count("version") > 0);
 	ops.show_help = (vm.count("help") > 0);
+	ops.verbose = (vm.count("verbose") > 0);
 
-	try {
-		// ...
-	} catch (nn::internal_exception &e) {
-		cerr << "Error: " << e.error() << " - " << e.reason() << "." << endl;
-		ops.show_usage = true;
-	} catch (std::exception &e) {
-		cerr << "Error: " << e.what() << endl;
-		ops.show_usage = true;
-	} catch (...) {
-		cerr << "Unknown error." << endl;
-		ops.show_usage = true;
+	if (vm.count("type")) {
+		// options.type = vm["type"].as<std::string>();
 	}
+	if (vm.count("bind")) {
+		// options.binds = vm["bind"].as<std::vector<std::string>>();
+	}
+	if (vm.count("connect")) {
+		// options.connects = vm["connect"].as<std::vector<std::string>>();
+	}
+
 	return ops;
 }
 
 ostream& 
 show_usage(ostream& stream) {
-	stream << "Usage: nanomsgpp [options] SOCKETTYPE ENDPOINT" << endl;
-	stream << "nanomsg command line client." << endl;
-	stream << "SOCKETTYPE is one of the supported nanomsg socket types." << endl;
-	stream << "  pull, push, pub, sub, req, rep" << endl;
-	stream << "ENDPOINT is any valid nanomsg endpoint." << endl;
+	stream << "nanomsg command line tool usage:" << endl;
+	stream << "  nanomsgpp req {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC] [-AQ]" << endl;
+	stream << "  nanomsgpp rep {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-AQ]" << endl;
+	stream << "  nanomsgpp push {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC]" << endl;
+	stream << "  nanomsgpp pull {--connect ADDR|--bind ADDR} [-AQ]" << endl;
+	stream << "  nanomsgpp pub {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC]" << endl;
+	stream << "  nanomsgpp sub {--connect ADDR|--bind ADDR} [--subscribe TOPIC ...] [-AQ]" << endl;
+	stream << "  nanomsgpp surveyor {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC] [-AQ]" << endl;
+	stream << "  nanomsgpp respondent {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-AQ]" << endl;
+	stream << "  nanomsgpp bus {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC] [-AQ]" << endl;
+	stream << "  nanomsgpp pair {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC] [-AQ]" << endl;
 	return stream;
 }
 
 ostream& 
 show_help(ostream& stream) {
-	stream << connection_options() << endl;
 	stream << miscellaneous_options() << endl;
+	stream << socket_options() << endl;
+	stream << sub_socket_options() << endl;
+	stream << input_options() << endl;
+	stream << output_options() << endl;
 	return stream;
 }

@@ -32,11 +32,13 @@ namespace client {
 		bool        show_usage;
 		bool        show_help;
 		bool        show_version;
+		bool        verbose;
 
 		options()
 			: show_usage(false)
 			, show_help(false)
 			, show_version(false)
+			, verbose(false)
 		{}
 	};
 
