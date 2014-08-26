@@ -35,7 +35,7 @@ AC_LANG([C++], [C])
 PKG_PROG_PKG_CONFIG
 
 # Check for riemann-client
-PKG_CHECK_MODULES([NANOMSG], [nanomsg >= 0.4])
+PKG_CHECK_MODULES([NANOMSG], [libnanomsg >= 2.0.2])
 
 # Checks for existence of coverage tools and define variables for reporting coverage
 AC_CHECK_COVERAGE
