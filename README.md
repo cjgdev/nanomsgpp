@@ -1,4 +1,4 @@
-# riemannpp (C++)
+# nanomsgpp (C++)
 
 ## Introduction
 
