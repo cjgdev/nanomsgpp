@@ -24,10 +24,18 @@
 
 #include <nanomsgpp/message.hpp>
 
-namespace nm = nanomsgpp;
+namespace nn = nanomsgpp;
 
 TEST_CASE("messages can be manipulated", "[message]") {
 	SECTION("default constructor") {
-
+		nn::message m;
+	}
+	SECTION("add message part") {
+		nn::message m;
+		m.add_part(nn::part(12, 0));
+	}
+	SECTION("stream operator add message part") {
+		nn::message m;
+		m << nn::part(12, 0);
 	}
 }

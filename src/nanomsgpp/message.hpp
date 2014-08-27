@@ -23,30 +23,59 @@
 #ifndef NANOMSGPP_MESSAGE_HPP_INCLUDED
 #define NANOMSGPP_MESSAGE_HPP_INCLUDED
 
+#include <nanomsg/nn.h>
 #include <iostream>
+#include <memory>
+#include <vector>
 
 namespace nanomsgpp {
 
-	class message {
-		std::ostream d_stream;
+	class part {
+		void* d_msg;
 	public:
-		message() = default;
+		part(part&& other);
+
+		part(size_t size, int type);
+
+		~part();
+
+		part& operator=(part &&other);
+
+		operator void*() const { return d_msg; }
+
+		void* release();
+
+	private:
+		part(const part& other) = delete;
+
+		part& operator=(const part &other) = delete;
+	};
+
+	typedef std::vector<part> parts;
+
+	class message {
+		std::unique_ptr<nn_msghdr> d_header;
+		parts                      d_parts;
+	public:
+		message();
 
 		message(const message &other) = default;
 
 		message(message &&other) = default;
 
-		~message() = default;
+		~message();
 
 		message& operator=(const message &other) = default;
 
 		message& operator=(message &&other) = default;
 
-		template <typename T>
-		message& operator<<(const T& t) {
-			d_stream << t;
-			return (*this);
-		}
+		void add_part(part&& p);
+
+		message& operator<<(part&& p);
+
+		operator nn_msghdr*() const { return d_header.get(); }
+
+		nn_msghdr* release() { return d_header.release(); }
 	};
 
 }

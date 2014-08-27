@@ -22,6 +22,7 @@
 
 #include "nanomsgpp/socket.hpp"
 #include "nanomsgpp/exception.hpp"
+#include <nanomsg/nn.h>
 
 using namespace nanomsgpp;
 
