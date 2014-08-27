@@ -42,27 +42,24 @@ namespace nanomsgpp {
 
 	class socket {
 		int                        d_socket;
-		socket_type                d_type;
 		std::map<std::string, int> d_endpoints;
 
 	public:
-		socket() = delete;
-
-		socket(const socket &other) = delete;
-
 		socket(socket &&other) = default;
 
-		socket(socket_type type);
+		explicit socket(int socket);
 
-		~socket() = default;
+		explicit socket(socket_domain domain, socket_type type);
 
-		socket& operator=(const socket &other) = delete;
+		~socket();
 
 		socket& operator=(socket &&other) = default;
 
+		int get_fd() const { return d_socket; }
+
 		void send(message &msg, bool dont_wait = true);
 
-		void send_raw(const void *buf, size_t len, int flags);
+		int send_raw(const void *buf, size_t len, int flags);
 
 		void operator<<(message &msg);
 
@@ -72,18 +69,38 @@ namespace nanomsgpp {
 
 		socket& operator>>(std::unique_ptr<message> &m);
 
-		void set_option(socket_option opt, int val);
+		void set_option(int level, socket_option opt, int val);
 
-		void set_option(socket_option opt, const std::string &val);
+		void set_option(int level, socket_option opt, const std::string &val);
 
 		void set_option_raw(int level, int option, const void *val, size_t len);
+
+		template<typename T>
+		T get_option(int level, socket_option opt);
+
+		void get_option_raw(int level, int option, void *val, size_t *len);
 
 		void bind(const std::string &addr);
 
 		void connect(const std::string &addr);
 
 		void shutdown(const std::string &addr);
+
+	private:
+		socket() = delete;
+
+		socket(const socket &other) = delete;
+
+		socket& operator=(const socket &other) = delete;
 	};
+
+	// INLINE FUNCTION DEFINITIONS
+
+	template<>
+	int socket::get_option(int level, socket_option opt);
+
+	template<>
+	std::string socket::get_option(int level, socket_option opt);
 
 }
 

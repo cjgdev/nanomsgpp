@@ -33,7 +33,21 @@
 
 namespace nanomsgpp {
 
-	enum class socket_type {
+	enum class socket_domain : int {
+		/**
+		 * Standard full-blown SP socket.
+		 */
+		sp = AF_SP,
+
+		/**
+		 * Raw SP socket. Raw sockets omit the end-to-end functionality found in
+		 * AF_SP sockets and thus can be used to implement intermediary devices
+		 * in SP topologies.
+		 */
+		sp_raw = AF_SP_RAW,
+	};
+
+	enum class socket_type : int {
 		/**
 		 * Socket for communication with exactly one peer. Each party can send
 		 * messages at any time. If the peer is not available or send buffer is full

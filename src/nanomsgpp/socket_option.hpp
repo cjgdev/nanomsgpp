@@ -24,10 +24,14 @@
 #define NANOMSGPP_SOCKET_OPTION_HPP_INCLUDED
 
 #include <nanomsg/nn.h>
+#include <nanomsg/tcp.h>
+#include <nanomsg/reqrep.h>
+#include <nanomsg/pubsub.h>
+#include <nanomsg/survey.h>
 
 namespace nanomsgpp {
 
-	enum class socket_option {
+	enum class socket_option : int {
 		/**
 		 * Specifies how long should the socket try to send pending outbound
 		 * messages after nn_close() have been called, in milliseconds. Negative
@@ -110,7 +114,41 @@ namespace nanomsgpp {
 		 * string. Default value is "socket.N" where N is socket integer. This
 		 * option is experimental, see nn_env(7) for details
 		 */
-		socket_name            = NN_SOCKET_NAME
+		socket_name            = NN_SOCKET_NAME,
+
+		/**
+		 * This option, when set to 1, disables Nagle’s algorithm. It also disables
+		 * delaying of TCP acknowledgments. Using this option improves latency at
+		 * the expense of throughput. Type of this option is int. Default value is 0.
+		 */
+		tcp_nodelay            = NN_TCP_NODELAY,
+
+		/**
+		 * This option is defined on the full REQ socket. If reply is not received in
+		 * specified amount of milliseconds, the request will be automatically resent.
+		 * The type of this option is int. Default value is 60000 (1 minute).
+		 */
+		request_resend_interval = NN_REQ_RESEND_IVL,
+
+		/**
+		 * Defined on full SUB socket. Subscribes for a particular topic. Type of the
+		 * option is string.
+		 */
+		sub_subscribe           = NN_SUB_SUBSCRIBE,
+
+		/**
+		 * Defined on full SUB socket. Unsubscribes from a particular topic. Type of
+		 * the option is string.
+		 */
+		sub_unsubscribe         = NN_SUB_UNSUBSCRIBE,
+
+		/**
+		 * Specifies how long to wait for responses to the survey. Once the deadline
+		 * expires, receive function will return ETIMEDOUT error and all subsequent
+		 * responses to the survey will be silently dropped. The deadline is measured
+		 * in milliseconds. Option type is int. Default value is 1000 (1 second).
+		 */
+		surveyor_deadline       = NN_SURVEYOR_DEADLINE,
 	};
 
 }
