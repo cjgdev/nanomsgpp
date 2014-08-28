@@ -30,31 +30,52 @@
 
 namespace nanomsgpp {
 
+	struct msghdr_free {
+		void operator()(void* x) {
+			std::free(static_cast<nn_msghdr*>(x)->msg_iov);
+			std::free(x);
+		}
+	};
+
+	typedef std::unique_ptr<nn_msghdr, msghdr_free> msghdr_unique_ptr;
+
 	class part {
-		void* d_msg;
+		void*  d_msg;
+		size_t d_size;
 	public:
+		// move constructor
 		part(part&& other);
 
+		// construct from pointer and size
+		part(void* ptr, size_t size);
+
+		// construct from size and type
 		part(size_t size, int type);
 
+		// destructor
 		~part();
 
+		// move assignment operator
 		part& operator=(part &&other);
 
-		operator void*() const { return d_msg; }
+		// cast to void* operator
+		operator void*() { return &d_msg; }
 
+		// get size of memory pointed to d_msg
+		size_t size() const { return d_size; }
+
+		// transfer ownership of d_msg
 		void* release();
 
 	private:
+		// not implemented
 		part(const part& other) = delete;
-
 		part& operator=(const part &other) = delete;
 	};
 
 	typedef std::vector<part> parts;
 
 	class message {
-		std::unique_ptr<nn_msghdr> d_header;
 		parts                      d_parts;
 	public:
 		message();
@@ -63,19 +84,39 @@ namespace nanomsgpp {
 
 		message(message &&other) = default;
 
+		// construct from nn_msghdr pointer
+		message(msghdr_unique_ptr hdr);
+
+		// destructor
 		~message();
 
 		message& operator=(const message &other) = default;
 
 		message& operator=(message &&other) = default;
 
+		// add a new part to the message
 		void add_part(part&& p);
 
+		// stream operator add message part
 		message& operator<<(part&& p);
 
-		operator nn_msghdr*() const { return d_header.get(); }
+		// generate a nn_msghdr from d_parts
+		msghdr_unique_ptr gen_nn_msghdr();
 
-		nn_msghdr* release() { return d_header.release(); }
+		// get an iterator to the beginning of d_parts
+		parts::iterator begin() { return d_parts.begin(); }
+
+		// get a const iterator to the beginning of d_parts
+		parts::const_iterator cbegin() const { return d_parts.cbegin(); }
+
+		// get an iterator to the end of d_parts
+		parts::iterator end() { return d_parts.end(); }
+
+		// get a const iterator to the end of d_parts
+		parts::const_iterator cend() const { return d_parts.cend(); }
+
+		// get the number of parts of the message
+		size_t size() const { return d_parts.size(); }
 	};
 
 }

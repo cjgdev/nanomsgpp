@@ -23,6 +23,7 @@
 #include "nanomsgpp/socket.hpp"
 #include "nanomsgpp/exception.hpp"
 #include <nanomsg/nn.h>
+#include <cstring>
 
 using namespace nanomsgpp;
 
@@ -120,12 +121,51 @@ socket::shutdown(const std::string &addr) {
 }
 
 int
-socket::send_raw(const void *buf, size_t len, int flags) {
-	int nb = nn_send(d_socket, buf, len, flags);
-	if (-1 == len) {
+socket::sendmsg(message&& msg, bool dont_wait) {
+	// ? unique_ptr should free nn_msghdr
+	int nb = nn_sendmsg(d_socket, msg.gen_nn_msghdr().get(), (dont_wait) ? NN_DONTWAIT : 0);
+	if (-1 == nb) {
 		throw internal_exception();
 	}
 	return nb;
+}
+
+socket&
+socket::operator<<(message&& msg) {
+	sendmsg(std::move(msg));
+	return (*this);
+}
+
+int
+socket::send_raw(const void *buf, size_t len, int flags) {
+	int nb = nn_send(d_socket, buf, len, flags);
+	if (-1 == nb) {
+		throw internal_exception();
+	}
+	return nb;
+}
+
+std::unique_ptr<message>
+socket::recvmsg(size_t n_parts, bool dont_wait) {
+	struct nn_msghdr* hdr = static_cast<nn_msghdr*>
+		(std::malloc(sizeof(nn_msghdr)));
+	struct nn_iovec *iov = static_cast<nn_iovec*>
+		(std::malloc(sizeof(nn_iovec) * n_parts));
+	unsigned char *buf = static_cast<unsigned char*>
+		(std::malloc(sizeof(unsigned char) * n_parts)); // TODO: memory leak (alloca?)
+	for (size_t i = 0; i < n_parts; ++i) {
+		iov[i].iov_base = &buf[i];
+		iov[i].iov_len = NN_MSG;
+	}
+	std::memset(hdr, 0, sizeof(nn_msghdr));
+	hdr->msg_iov = iov;
+	hdr->msg_iovlen = n_parts;
+	int nb = nn_recvmsg(d_socket, hdr, (dont_wait) ? NN_DONTWAIT : 0);
+	if (-1 == nb) {
+		throw internal_exception();
+	}
+	return std::unique_ptr<message>
+		(new message(msghdr_unique_ptr(hdr)));
 }
 
 int

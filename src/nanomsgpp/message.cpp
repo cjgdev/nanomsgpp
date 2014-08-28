@@ -29,18 +29,30 @@ using namespace nanomsgpp;
 
 part::part(part&& other)
 	: d_msg(other.release())
+	, d_size(other.d_size)
+{}
+
+part::part(void* ptr, size_t size)
+	: d_msg(ptr)
+	, d_size(size)
 {}
 
 part::part(size_t size, int type)
 	: d_msg(nn_allocmsg(size, type))
+	, d_size(NN_MSG)
 {}
 
 part::~part() {
 	if (d_msg != nullptr) {
-		int result = nn_freemsg(d_msg);
-		if (-1 == result) {
-			throw internal_exception();
+		if (d_size == NN_MSG) {
+			int result = nn_freemsg(d_msg);
+			if (-1 == result) {
+				throw internal_exception();
+			}
+		} else {
+			std::free(d_msg);
 		}
+		d_msg = nullptr;
 	}
 }
 
@@ -60,16 +72,19 @@ part::release() {
 // *** MESSAGE IMPLEMENTATION
 
 message::message()
-	: d_header(new nn_msghdr)
-{
-	std::memset(d_header.get(), 0, sizeof(nn_msghdr));
-}
+{}
 
-message::~message() {
-	if (d_header) {
-		delete d_header.release();
+message::message(msghdr_unique_ptr hdr) {
+	for (int i = 0; i < hdr->msg_iovlen; ++i) {
+		d_parts.push_back(part(
+				*(static_cast<void**>(hdr->msg_iov[i].iov_base)),
+				hdr->msg_iov[i].iov_len
+		));
 	}
 }
+
+message::~message()
+{}
 
 void
 message::add_part(part&& p) {
@@ -80,4 +95,22 @@ message&
 message::operator<<(part&& p) {
 	add_part(std::move(p));
 	return (*this);
+}
+
+msghdr_unique_ptr
+message::gen_nn_msghdr() {
+	struct nn_msghdr *hdr = static_cast<nn_msghdr*>
+		(std::malloc(sizeof(nn_msghdr)));
+	struct nn_iovec *iov = static_cast<nn_iovec*>
+		(std::malloc(sizeof(nn_iovec) * d_parts.size()));
+	int i = 0;
+	for (auto& p : d_parts) {
+		iov[i].iov_base = static_cast<void*>(p);
+		iov[i].iov_len = p.size();
+		i++;
+	}
+	std::memset(hdr, 0, sizeof(nn_msghdr));
+	hdr->msg_iov = iov;
+	hdr->msg_iovlen = i;
+	return msghdr_unique_ptr(hdr);
 }

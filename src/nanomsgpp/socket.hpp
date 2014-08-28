@@ -57,17 +57,17 @@ namespace nanomsgpp {
 
 		int get_fd() const { return d_socket; }
 
-		void send(message &msg, bool dont_wait = true);
+		int sendmsg(message&& msg, bool dont_wait = true);
+
+		socket& operator<<(message&& msg);
 
 		int send_raw(const void *buf, size_t len, int flags);
 
-		void operator<<(message &msg);
-
-		message receive(bool dont_wait = true);
-
-		int receive_raw(void *buf, size_t len, int flags);
+		std::unique_ptr<message> recvmsg(size_t n_parts, bool dont_wait = true);
 
 		socket& operator>>(std::unique_ptr<message> &m);
+
+		int receive_raw(void *buf, size_t len, int flags);
 
 		void set_option(int level, socket_option opt, int val);
 

@@ -23,6 +23,7 @@
 #include "catch.hpp"
 
 #include <nanomsgpp/message.hpp>
+#include <nanomsgpp/socket.hpp>
 
 namespace nn = nanomsgpp;
 
@@ -33,9 +34,58 @@ TEST_CASE("messages can be manipulated", "[message]") {
 	SECTION("add message part") {
 		nn::message m;
 		m.add_part(nn::part(12, 0));
+		REQUIRE(m.size() == 1);
 	}
 	SECTION("stream operator add message part") {
 		nn::message m;
 		m << nn::part(12, 0);
+		REQUIRE(m.size() == 1);
+	}
+	SECTION("generate nn_msghdr") {
+		nn::message m;
+		m.add_part(nn::part(1, 0));
+		m.add_part(nn::part(10, 0));
+		m.add_part(nn::part(100, 0));
+		REQUIRE(m.size() == 3);
+
+		nn::msghdr_unique_ptr hdr = m.gen_nn_msghdr();
+		REQUIRE(hdr->msg_iovlen == 3);
+		REQUIRE(hdr->msg_iov[0].iov_base != nullptr);
+		REQUIRE(hdr->msg_iov[0].iov_len == NN_MSG);
+		REQUIRE(hdr->msg_iov[1].iov_base != nullptr);
+		REQUIRE(hdr->msg_iov[1].iov_len == NN_MSG);
+		REQUIRE(hdr->msg_iov[2].iov_base != nullptr);
+		REQUIRE(hdr->msg_iov[2].iov_len == NN_MSG);
+	}
+	SECTION("range based for message parts") {
+		nn::message m;
+		for (int i = 0; i < 10; ++i) {
+			m.add_part(nn::part(1, 0));
+		}
+		int i = 0;
+		for (auto& part : m) {
+			REQUIRE(static_cast<void*>(part) != nullptr);
+			REQUIRE(part.size() == NN_MSG);
+			i++;
+		}
+		REQUIRE(i == 10);
+	}
+}
+
+TEST_CASE("messages can be sent and received", "[message]") {
+	SECTION("socket pair") {
+		nn::socket s1(nn::socket_domain::sp, nn::socket_type::pair);
+		REQUIRE_NOTHROW(s1.bind("inproc://test"));
+
+		nn::socket s2(nn::socket_domain::sp, nn::socket_type::pair);
+		REQUIRE_NOTHROW(s2.connect("inproc://test"));
+
+		nn::message send;
+		send << nn::part(1, 0);
+		REQUIRE(send.size() == 1);
+		REQUIRE_NOTHROW(s1.sendmsg(std::move(send)));
+
+		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
+		REQUIRE(recv->size() == 1);
 	}
 }
