@@ -73,7 +73,7 @@ TEST_CASE("messages can be manipulated", "[message]") {
 }
 
 TEST_CASE("messages can be sent and received", "[message]") {
-	SECTION("socket pair") {
+	SECTION("can send and receive messages") {
 		nn::socket s1(nn::socket_domain::sp, nn::socket_type::pair);
 		REQUIRE_NOTHROW(s1.bind("inproc://test"));
 
@@ -81,11 +81,31 @@ TEST_CASE("messages can be sent and received", "[message]") {
 		REQUIRE_NOTHROW(s2.connect("inproc://test"));
 
 		nn::message send;
-		send << nn::part(1, 0);
+		send << nn::part(256, 0);
 		REQUIRE(send.size() == 1);
-		REQUIRE_NOTHROW(s1.sendmsg(std::move(send)));
+		REQUIRE(s1.sendmsg(std::move(send)) == 256);
 
 		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
 		REQUIRE(recv->size() == 1);
 	}
+	//	SECTION("can send and receive raw") {
+	//		nn::socket s1(nn::socket_domain::sp, nn::socket_type::pair);
+	//		REQUIRE_NOTHROW(s1.bind("inproc://test"));
+	//
+	//		nn::socket s2(nn::socket_domain::sp, nn::socket_type::pair);
+	//		REQUIRE_NOTHROW(s2.connect("inproc://test"));
+	//
+	//		unsigned char *buf1, *buf2;
+	//		buf1 = static_cast<unsigned char*>
+	//			(nn_allocmsg(256, 0));
+	//		for (int i = 0; i < 256; ++i)
+	//			buf1[i] = static_cast<unsigned char>(i);
+	//		REQUIRE(s1.send_raw(&buf1, NN_MSG, 0) == 256);
+	//
+	//		buf2 = nullptr;
+	//		REQUIRE(s2.receive_raw(&buf2, NN_MSG, 0) == 256);
+	//		for (int i = 0; i < 256; ++i)
+	//			REQUIRE(static_cast<unsigned char>(i) == buf2[i]);
+	//		nn_freemsg(buf2);
+	//	}
 }

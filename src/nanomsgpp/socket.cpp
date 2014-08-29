@@ -122,8 +122,8 @@ socket::shutdown(const std::string &addr) {
 
 int
 socket::sendmsg(message&& msg, bool dont_wait) {
-	// ? unique_ptr should free nn_msghdr
 	int nb = nn_sendmsg(d_socket, msg.gen_nn_msghdr().get(), (dont_wait) ? NN_DONTWAIT : 0);
+	msg.release();
 	if (-1 == nb) {
 		throw internal_exception();
 	}
@@ -147,25 +147,33 @@ socket::send_raw(const void *buf, size_t len, int flags) {
 
 std::unique_ptr<message>
 socket::recvmsg(size_t n_parts, bool dont_wait) {
-	struct nn_msghdr* hdr = static_cast<nn_msghdr*>
-		(std::malloc(sizeof(nn_msghdr)));
-	struct nn_iovec *iov = static_cast<nn_iovec*>
-		(std::malloc(sizeof(nn_iovec) * n_parts));
-	unsigned char *buf = static_cast<unsigned char*>
-		(std::malloc(sizeof(unsigned char) * n_parts)); // TODO: memory leak (alloca?)
-	for (size_t i = 0; i < n_parts; ++i) {
-		iov[i].iov_base = &buf[i];
-		iov[i].iov_len = NN_MSG;
+	struct nn_msghdr hdr;
+	struct nn_iovec iov;
+	parts msgparts;
+
+	size_t buf_size = (1 == n_parts) ? NN_MSG : 2048;
+	for (int i = 0; i < n_parts; ++i) {
+		if (1 == n_parts) {
+			msgparts.push_back(part(nullptr, NN_MSG));
+		} else {
+			msgparts.push_back(part(buf_size));
+		}
+		iov.iov_len = buf_size;
+		iov.iov_base = static_cast<void*>
+			(msgparts.back());
 	}
-	std::memset(hdr, 0, sizeof(nn_msghdr));
-	hdr->msg_iov = iov;
-	hdr->msg_iovlen = n_parts;
-	int nb = nn_recvmsg(d_socket, hdr, (dont_wait) ? NN_DONTWAIT : 0);
+
+	std::memset(&hdr, 0, sizeof(hdr));
+	hdr.msg_iov = &iov;
+	hdr.msg_iovlen = n_parts;
+
+	int nb = nn_recvmsg(d_socket, &hdr, (dont_wait) ? NN_DONTWAIT : 0);
 	if (-1 == nb) {
 		throw internal_exception();
 	}
+
 	return std::unique_ptr<message>
-		(new message(msghdr_unique_ptr(hdr)));
+		(new message(std::move(msgparts)));
 }
 
 int

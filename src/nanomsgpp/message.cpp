@@ -42,6 +42,11 @@ part::part(size_t size, int type)
 	, d_size(NN_MSG)
 {}
 
+part::part(size_t size)
+	: d_msg(std::malloc(sizeof(char) * size))
+	, d_size(size)
+{}
+
 part::~part() {
 	if (d_msg != nullptr) {
 		if (d_size == NN_MSG) {
@@ -74,14 +79,9 @@ part::release() {
 message::message()
 {}
 
-message::message(msghdr_unique_ptr hdr) {
-	for (int i = 0; i < hdr->msg_iovlen; ++i) {
-		d_parts.push_back(part(
-				*(static_cast<void**>(hdr->msg_iov[i].iov_base)),
-				hdr->msg_iov[i].iov_len
-		));
-	}
-}
+message::message(parts&& msgparts)
+	: d_parts(std::move(msgparts))
+{}
 
 message::~message()
 {}
@@ -113,4 +113,12 @@ message::gen_nn_msghdr() {
 	hdr->msg_iov = iov;
 	hdr->msg_iovlen = i;
 	return msghdr_unique_ptr(hdr);
+}
+
+void
+message::release() {
+	for (auto& p : d_parts) {
+		p.release();
+	}
+	d_parts.clear();
 }

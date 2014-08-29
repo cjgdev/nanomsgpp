@@ -49,8 +49,11 @@ namespace nanomsgpp {
 		// construct from pointer and size
 		part(void* ptr, size_t size);
 
-		// construct from size and type
+		// construct from size and type, will allocate (nn_allocmsg)
 		part(size_t size, int type);
+
+		// construct from size, will allocate (malloc)
+		part(size_t size);
 
 		// destructor
 		~part();
@@ -84,8 +87,8 @@ namespace nanomsgpp {
 
 		message(message &&other) = default;
 
-		// construct from nn_msghdr pointer
-		message(msghdr_unique_ptr hdr);
+		// construct from parts
+		message(parts&& msgparts);
 
 		// destructor
 		~message();
@@ -117,6 +120,12 @@ namespace nanomsgpp {
 
 		// get the number of parts of the message
 		size_t size() const { return d_parts.size(); }
+
+		// get a message part by index
+		part& at(size_t index) { return d_parts.at(index); }
+
+		// transfer ownership of message
+		void release();
 	};
 
 }
