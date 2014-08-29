@@ -23,10 +23,27 @@
 #ifndef NANOMSGPP_DEVICE_HPP_INCLUDED
 #define NANOMSGPP_DEVICE_HPP_INCLUDED
 
+#ifndef NANOMSGPP_SOCKET_HPP_INCLUDED
+#	include "socket.hpp"
+#endif
+
 namespace nanomsgpp {
 
 	class device {
 	public:
+		device() = delete;
+
+		device(device&& other) = delete;
+
+		device(const device& other) = delete;
+
+		device(socket& a, socket& b);
+
+		~device() {};
+
+		device& operator=(const device& other) = delete;
+
+		device& operator=(device&& other) = delete;
 	};
 
 }

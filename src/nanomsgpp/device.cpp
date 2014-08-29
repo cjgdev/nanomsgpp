@@ -21,5 +21,14 @@
  */
 
 #include "nanomsgpp/device.hpp"
+#include "nanomsgpp/exception.hpp"
+#include <nanomsg/nn.h>
 
 using namespace nanomsgpp;
+
+device::device(socket& a, socket& b) {
+	int result = nn_device(a.get_fd(), b.get_fd());
+	if (-1 == result) {
+		throw internal_exception();
+	}
+}

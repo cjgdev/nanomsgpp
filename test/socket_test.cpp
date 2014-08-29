@@ -38,6 +38,12 @@ TEST_CASE("sockets can be manipulated", "[socket]") {
 		nn::socket socket(nn::socket_domain::sp, nn::socket_type::request);
 		REQUIRE(socket.get_fd() >= 0);
 	}
+	SECTION("connect and close") {
+		nn::socket socket(nn::socket_domain::sp, nn::socket_type::request);
+		REQUIRE_NOTHROW(socket.connect("ipc://test"));
+		REQUIRE_NOTHROW(socket.close());
+		REQUIRE(socket.get_fd() < 0);
+	}
 	SECTION("get and set socket option") {
 		nn::socket socket(nn::socket_domain::sp, nn::socket_type::request);
 

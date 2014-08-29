@@ -38,13 +38,7 @@ socket::socket(socket_domain domain, socket_type type)
 {}
 
 socket::~socket() {
-	if (d_socket >= 0) {
-		int result = nn_close(d_socket);
-		d_socket = -1;
-		if (result != 0) {
-			throw internal_exception();
-		}
-	}
+	close();
 }
 
 void
@@ -120,6 +114,17 @@ socket::shutdown(const std::string &addr) {
 	}
 }
 
+void
+socket::close() {
+	if (d_socket >= 0) {
+		int result = nn_close(d_socket);
+		d_socket = -1;
+		if (-1 == result) {
+			throw internal_exception();
+		}
+	}
+}
+
 int
 socket::sendmsg(message&& msg, bool dont_wait) {
 	int nb = nn_sendmsg(d_socket, msg.gen_nn_msghdr().get(), (dont_wait) ? NN_DONTWAIT : 0);
@@ -148,7 +153,7 @@ socket::send_raw(const void *buf, size_t len, int flags) {
 std::unique_ptr<message>
 socket::recvmsg(size_t n_parts, bool dont_wait) {
 	struct nn_msghdr hdr;
-	struct nn_iovec iov;
+	struct nn_iovec iov[n_parts];
 	parts msgparts;
 
 	size_t buf_size = (1 == n_parts) ? NN_MSG : 2048;
@@ -158,13 +163,13 @@ socket::recvmsg(size_t n_parts, bool dont_wait) {
 		} else {
 			msgparts.push_back(part(buf_size));
 		}
-		iov.iov_len = buf_size;
-		iov.iov_base = static_cast<void*>
+		iov[i].iov_len = buf_size;
+		iov[i].iov_base = static_cast<void*>
 			(msgparts.back());
 	}
 
 	std::memset(&hdr, 0, sizeof(hdr));
-	hdr.msg_iov = &iov;
+	hdr.msg_iov = iov;
 	hdr.msg_iovlen = n_parts;
 
 	int nb = nn_recvmsg(d_socket, &hdr, (dont_wait) ? NN_DONTWAIT : 0);
@@ -177,9 +182,9 @@ socket::recvmsg(size_t n_parts, bool dont_wait) {
 }
 
 int
-socket::receive_raw(void *buf, size_t len, int flags) {
+socket::recv_raw(void *buf, size_t len, int flags) {
 	int nb = nn_recv(d_socket, buf, len, flags);
-	if (-1 == len) {
+	if (-1 == nb) {
 		throw internal_exception();
 	}
 	return nb;

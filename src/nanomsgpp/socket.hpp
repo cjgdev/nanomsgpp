@@ -67,7 +67,7 @@ namespace nanomsgpp {
 
 		socket& operator>>(std::unique_ptr<message> &m);
 
-		int receive_raw(void *buf, size_t len, int flags);
+		int recv_raw(void *buf, size_t len, int flags);
 
 		void set_option(int level, socket_option opt, int val);
 
@@ -85,6 +85,8 @@ namespace nanomsgpp {
 		void connect(const std::string &addr);
 
 		void shutdown(const std::string &addr);
+
+		void close();
 
 	private:
 		socket() = delete;

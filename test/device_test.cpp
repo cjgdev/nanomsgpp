@@ -23,11 +23,26 @@
 #include "catch.hpp"
 
 #include <nanomsgpp/device.hpp>
+#include <nanomsgpp/socket.hpp>
 
-namespace nm = nanomsgpp;
+#include <thread>
 
-TEST_CASE("devices can be manipulated", "[device]") {
+namespace nn = nanomsgpp;
+
+TEST_CASE("devices can be created", "[device]") {
 	SECTION("default constructor") {
+		nn::socket s1(nn::socket_domain::sp_raw, nn::socket_type::pair);
+		REQUIRE_NOTHROW(s1.bind("inproc://testa"));
 
+		nn::socket s2(nn::socket_domain::sp_raw, nn::socket_type::pair);
+		REQUIRE_NOTHROW(s2.bind("inproc://testb"));
+
+//		std::thread t1([&]() {
+//			REQUIRE_THROWS(nn::device d(s1, s2));
+//		});
+
+		s2.close();
+		s1.close();
+//		t1.join();
 	}
 }
