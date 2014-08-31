@@ -18,6 +18,8 @@ src_nanomsgpp_libnanomsgpp_la_SOURCES = \
 	src/nanomsgpp/exception.cpp     \
 	src/nanomsgpp/message.hpp       \
 	src/nanomsgpp/message.cpp       \
+	src/nanomsgpp/poller.hpp        \
+	src/nanomsgpp/poller.cpp        \
 	src/nanomsgpp/socket.hpp        \
 	src/nanomsgpp/socket.cpp        \
 	src/nanomsgpp/socket_option.hpp \
@@ -60,6 +62,7 @@ test_nanomsgpp_test_SOURCES = \
 	test/nanomsgpp_test.cpp \
 	test/device_test.cpp    \
 	test/message_test.cpp   \
+	test/poller_test.cpp    \
 	test/socket_test.cpp
 test_nanomsgpp_test_CFLAGS = -I$(top_srcdir)/src $(NANOMSG_CFLAGS)
 test_nanomsgpp_test_LDADD = $(top_builddir)/src/nanomsgpp/libnanomsgpp.la $(LDADD)

@@ -31,18 +31,16 @@ namespace nanomsgpp {
 
 	class device {
 	public:
-		device() = delete;
-
-		device(device&& other) = delete;
-
-		device(const device& other) = delete;
-
 		device(socket& a, socket& b);
 
 		~device() {};
 
+	private:
+		// NOT IMPLEMENTED
+		device() = delete;
+		device(device&& other) = delete;
+		device(const device& other) = delete;
 		device& operator=(const device& other) = delete;
-
 		device& operator=(device&& other) = delete;
 	};
 
