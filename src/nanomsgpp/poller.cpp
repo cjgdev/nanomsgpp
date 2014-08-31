@@ -27,3 +27,40 @@
 using namespace nanomsgpp;
 
 poller::poller() {}
+
+void
+poller::add_socket(socket& s, poll_event e) {
+	nn_pollfd pfd = { s.get_fd(), (short)e, 0 };
+	d_pollfds.push_back(std::move(pfd));
+}
+
+void
+poller::remove_socket(socket& s) {
+	auto it = d_pollfds.begin();
+	for (; it != d_pollfds.end(); it++) {
+		if ((*it).fd == s.get_fd()) {
+			break;
+		}
+	}
+	if (it != d_pollfds.end()) { d_pollfds.erase(it); }
+}
+
+bool poller::poll(int timeout) {
+	int rc = nn_poll(d_pollfds.data(), d_pollfds.size(), timeout);
+	if (-1 == rc) {
+		throw internal_exception();
+	} else if (rc > 0) {
+		return (true);
+	}
+	return (false);
+}
+
+bool
+poller::has_event(socket& s, poll_event e) {
+	for (auto& pfd : d_pollfds) {
+		if (pfd.fd == s.get_fd()) {
+			return (pfd.revents & (short)e);
+		}
+	}
+	return (false);
+}

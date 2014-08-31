@@ -29,11 +29,26 @@
 
 namespace nanomsgpp {
 
+	enum class poll_event {
+		in  = NN_POLLIN,
+		out = NN_POLLOUT,
+	};
+
 	class poller {
+		std::vector<nn_pollfd> d_pollfds;
+
 	public:
 		poller();
 
 		~poller() {};
+
+		void add_socket(socket& s, poll_event e);
+
+		void remove_socket(socket& s);
+
+		bool poll(int timeout = -1);
+
+		bool has_event(socket& s, poll_event e);
 	};
 
 }
