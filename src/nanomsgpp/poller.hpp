@@ -30,8 +30,9 @@
 namespace nanomsgpp {
 
 	enum class poll_event {
-		in  = NN_POLLIN,
-		out = NN_POLLOUT,
+		in     = NN_POLLIN,
+		out    = NN_POLLOUT,
+		in_out = NN_POLLIN | NN_POLLOUT,
 	};
 
 	class poller {

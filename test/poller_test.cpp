@@ -44,6 +44,7 @@ TEST_CASE("pollers can be manipulated", "[poller]") {
 		nn::poller poller;
 		poller.add_socket(s2, nn::poll_event::in);
 		REQUIRE(true == poller.poll(100));
+		REQUIRE(true == poller.has_event(s2, nn::poll_event::in));
 	}
 	SECTION("poll event receive timeout") {
 		nn::poller poller;
@@ -53,6 +54,19 @@ TEST_CASE("pollers can be manipulated", "[poller]") {
 	SECTION("poll event send") {
 		nn::poller poller;
 		poller.add_socket(s1, nn::poll_event::out);
+		REQUIRE(true == poller.poll());
+		REQUIRE(true == poller.has_event(s1, nn::poll_event::out));
+	}
+	SECTION("poll event send and receive") {
+		nn::poller poller;
+		poller.add_socket(s2, nn::poll_event::in_out);
+		REQUIRE(true == poller.poll());
+		REQUIRE(true == poller.has_event(s2, nn::poll_event::out));
+	}
+	SECTION("poll multiple sockets") {
+		nn::poller poller;
+		poller.add_socket(s1, nn::poll_event::out);
+		poller.add_socket(s2, nn::poll_event::in);
 		REQUIRE(true == poller.poll());
 	}
 }
