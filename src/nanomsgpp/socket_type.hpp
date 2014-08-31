@@ -88,14 +88,14 @@ namespace nanomsgpp {
 		 * the responses. When the survey deadline expires, receive will return
 		 * ETIMEDOUT error.
 		 */
-		surveyor   = NN_PAIR,
+		surveyor   = NN_SURVEYOR,
 
 		/**
 		 * Use to respond to the survey. Survey is received using receive function,
 		 * response is sent using send function. This socket can be connected to at
 		 * most one peer.
 		 */
-		respondent = NN_PAIR,
+		respondent = NN_RESPONDENT,
 
 		/**
 		 * This socket is used to send messages to a cluster of load-balanced nodes.

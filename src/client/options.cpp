@@ -22,19 +22,57 @@
 
 #include "options.hpp"
 
-#include <nanomsgpp/nanomsgpp.hpp>
-
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
 
-namespace bpo = boost::program_options;
-namespace nn = nanomsgpp;
+#include <fstream>
 
 using namespace client;
 using namespace std;
 
-#define HAVE_JSON 0
+namespace bpo = boost::program_options;
+namespace nn = nanomsgpp;
+
+nn::socket_type
+options::get_type() const {
+	nn::socket_type st;
+	if (type == "req")             { st = nn::socket_type::request; }
+	else if (type == "rep")        { st = nn::socket_type::reply; }
+	else if (type == "push")       { st = nn::socket_type::push; }
+	else if (type == "pull")       { st = nn::socket_type::pull; }
+	else if (type == "pub")        { st = nn::socket_type::publish; }
+	else if (type == "sub")        { st = nn::socket_type::subscribe; }
+	else if (type == "surveyor")   { st = nn::socket_type::surveyor; }
+	else if (type == "respondent") { st = nn::socket_type::respondent; }
+	else if (type == "bus")        { st = nn::socket_type::bus; }
+	else if (type == "pair")       { st = nn::socket_type::pair; }
+	else { throw std::invalid_argument("Invalid argument \"type\""); }
+	return st;
+}
+
+echo_format
+options::get_format() const {
+	echo_format f = echo_format::none;
+	if (format == "raw" || raw)            { f = echo_format::raw; }
+	else if (format == "ascii" || ascii)   { f = echo_format::ascii; }
+	else if (format == "quoted" || quoted) { f = echo_format::quoted; }
+	else if (format == "msgpack")          { f = echo_format::msgpack; }
+	return f;
+}
+
+string
+options::get_data() const {
+	if (!data.empty()) { return std::string(data); }
+	if (!file.empty()) {
+		ifstream f(file);
+		return string(
+				istreambuf_iterator<char>(f),
+				istreambuf_iterator<char>()
+		);
+	}
+	return string("");
+}
 
 bpo::options_description
 socket_options()
@@ -54,7 +92,7 @@ sub_socket_options()
 {
 	boost::program_options::options_description options("SUB Socket Options");
 	options.add_options()
-		("subscribe", "subscribe to a topic. note: socket will be subscribed to everything if no topics are specified")
+		("subscribe", bpo::value<std::vector<std::string>>(), "subscribe to a topic. note: socket will be subscribed to everything if no topics are specified")
 	;
 	return options;
 }
@@ -136,22 +174,27 @@ process_command_line(int argc, char const* argv[]) {
 	ops.show_help = (vm.count("help") > 0);
 	ops.verbose = (vm.count("verbose") > 0);
 
-	if (vm.count("type")) {
-		// options.type = vm["type"].as<std::string>();
-	}
-	if (vm.count("bind")) {
-		// options.binds = vm["bind"].as<std::vector<std::string>>();
-	}
-	if (vm.count("connect")) {
-		// options.connects = vm["connect"].as<std::vector<std::string>>();
-	}
+	if (vm.count("type")) { ops.type = vm["type"].as<std::string>(); }
+	if (vm.count("bind")) { ops.bind = vm["bind"].as<std::vector<std::string>>(); }
+	if (vm.count("connect")) { ops.connect = vm["connect"].as<std::vector<std::string>>(); }
+	if (vm.count("recv-timeout")) { ops.recv_timeout = vm["recv-timeout"].as<int>(); }
+	if (vm.count("send-timeout")) { ops.send_timeout = vm["send-timeout"].as<int>(); }
+	if (vm.count("subscribe")) { ops.subscribe = vm["subscribe"].as<std::vector<std::string>>(); }
+	if (vm.count("format")) { ops.format = vm["format"].as<std::string>(); }
+	ops.raw = (vm.count("raw") > 0);
+	ops.ascii = (vm.count("ascii") > 0);
+	ops.quoted = (vm.count("quoted") > 0);
+	if (vm.count("interval")) { ops.interval = vm["interval"].as<int>(); }
+	if (vm.count("delay")) { ops.delay = vm["delay"].as<int>(); }
+	if (vm.count("data")) { ops.data = vm["data"].as<std::string>(); }
+	if (vm.count("file")) { ops.file = vm["file"].as<std::string>(); }
 
 	return ops;
 }
 
 ostream& 
 show_usage(ostream& stream) {
-	stream << "nanomsg command line tool usage:" << endl;
+	stream << "nanomsgpp command line tool usage:" << endl;
 	stream << "  nanomsgpp req {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC] [-AQ]" << endl;
 	stream << "  nanomsgpp rep {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-AQ]" << endl;
 	stream << "  nanomsgpp push {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC]" << endl;
