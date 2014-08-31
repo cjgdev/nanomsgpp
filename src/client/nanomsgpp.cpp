@@ -33,9 +33,8 @@ using namespace std;
 
 namespace nn = nanomsgpp;
 
-nn::socket&&
-create_socket(const options& ops) {
-	nn::socket socket(nn::socket_domain::sp, ops.get_type());
+void
+configure_socket(nn::socket& socket, const options& ops) {
 	socket.set_option(NN_SOL_SOCKET, nn::socket_option::send_timeout, ops.send_timeout * 1000);
 	socket.set_option(NN_SOL_SOCKET, nn::socket_option::receive_timeout, ops.recv_timeout);
 	if (ops.get_type() == nn::socket_type::subscribe) {
@@ -43,7 +42,6 @@ create_socket(const options& ops) {
 			socket.set_option(NN_SUB, nn::socket_option::sub_subscribe, subscription);
 		}
 	}
-	return std::move(socket);
 }
 
 void
@@ -191,8 +189,8 @@ int main(int argc, char const* argv[]) {
 		return EXIT_FAILURE;
 	}
 	try {
-		nn::socket socket(create_socket(ops));
-		connect_socket(socket, ops);
+		nn::socket socket(nn::socket_domain::sp, ops.get_type());
+		configure_socket(socket, ops);
 		if (ops.delay != -1) {
 			std::this_thread::sleep_for(std::chrono::seconds(ops.delay));
 		}

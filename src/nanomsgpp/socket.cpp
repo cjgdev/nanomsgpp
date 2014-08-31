@@ -27,6 +27,10 @@
 
 using namespace nanomsgpp;
 
+socket::socket(socket &&other) {
+	*this = std::move(other);
+}
+
 socket::socket(int socket)
 	: d_socket(socket)
 	, d_endpoints()
@@ -39,6 +43,14 @@ socket::socket(socket_domain domain, socket_type type)
 
 socket::~socket() {
 	close();
+}
+
+socket&
+socket::operator=(socket &&other) {
+	d_socket = other.d_socket;
+	other.d_socket = -1;
+	d_endpoints = std::move(other.d_endpoints);
+	return (*this);
 }
 
 void

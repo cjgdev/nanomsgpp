@@ -79,10 +79,10 @@ socket_options()
 {
 	boost::program_options::options_description options("Socket Options");
 	options.add_options()
-		("bind,b",    bpo::value<std::vector<std::string>>(), "bind to specified endpoint")
-		("connect,c", bpo::value<std::vector<std::string>>(), "connect to specified endpoint")
-		("recv-timeout", "timeout for receiving a message")
-		("send-timeout", "timeout for sending a message")
+		("bind,b",       bpo::value<std::vector<std::string>>(), "bind to specified endpoint")
+		("connect,c",    bpo::value<std::vector<std::string>>(), "connect to specified endpoint")
+		("recv-timeout", bpo::value<int>(), "timeout for receiving a message")
+		("send-timeout", bpo::value<int>(), "timeout for sending a message")
 	;
 	return options;
 }
@@ -115,10 +115,10 @@ output_options()
 {
 	boost::program_options::options_description options("Output Options");
 	options.add_options()
-		("interval,i", "send message (or request) every number of seconds")
-		("delay,d",    "wait for number of seconds before sending message")
-		("data,D",     "send data to the socket and quit")
-		("file,F",     "same as --data but get data from file")
+		("interval,i", bpo::value<int>(),         "send message (or request) every number of seconds")
+		("delay,d",    bpo::value<int>(),         "wait for number of seconds before sending message")
+		("data,D",     bpo::value<std::string>(), "send data to the socket and quit")
+		("file,F",     bpo::value<std::string>(), "same as --data but get data from file")
 	;
 	return options;
 }

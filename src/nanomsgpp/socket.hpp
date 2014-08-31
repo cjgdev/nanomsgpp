@@ -45,7 +45,7 @@ namespace nanomsgpp {
 		std::map<std::string, int> d_endpoints;
 
 	public:
-		socket(socket &&other) = default;
+		socket(socket &&other);
 
 		explicit socket(int socket);
 
@@ -53,7 +53,7 @@ namespace nanomsgpp {
 
 		~socket();
 
-		socket& operator=(socket &&other) = default;
+		socket& operator=(socket &&other);
 
 		int get_fd() const { return d_socket; }
 
