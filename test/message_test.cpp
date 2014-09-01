@@ -27,6 +27,38 @@
 
 namespace nn = nanomsgpp;
 
+TEST_CASE("message parts can be manipulated", "[message]") {
+	SECTION("construct with int pointer and size") {
+		uint32_t i = 1234;
+		nn::part p(reinterpret_cast<const void*>(&i), sizeof(i));
+		REQUIRE(*(p.as<uint32_t>()) == i);
+		REQUIRE(p.size() == sizeof(i));
+	}
+	SECTION("construct with float pointer and size") {
+		float f = 1.0f;
+		nn::part p(reinterpret_cast<const void*>(&f), sizeof(f));
+		REQUIRE(*(p.as<float>()) == f);
+		REQUIRE(p.size() == sizeof(f));
+	}
+	SECTION("construct with string pointer and size") {
+		std::string s("test");
+		nn::part p(reinterpret_cast<const void*>(s.c_str()), s.size());
+		REQUIRE(std::string(p.as<char>()) == s);
+		REQUIRE(p.size() == s.size());
+	}
+	SECTION("construct with struct pointer and size") {
+		struct data_t {
+			uint32_t a;
+			uint32_t b;
+		};
+		data_t data = { 1234, 5678 };
+		nn::part p(reinterpret_cast<const void*>(&data), sizeof(data));
+		REQUIRE(p.as<data_t>()->a == 1234);
+		REQUIRE(p.as<data_t>()->b == 5678);
+		REQUIRE(p.size() == sizeof(data));
+	}
+}
+
 TEST_CASE("messages can be manipulated", "[message]") {
 	SECTION("default constructor") {
 		nn::message m;
@@ -70,6 +102,15 @@ TEST_CASE("messages can be manipulated", "[message]") {
 		}
 		REQUIRE(i == 10);
 	}
+	SECTION("stream operator write message parts") {
+		nn::message m;
+		m << uint64_t(1) << uint32_t(1) << uint16_t(1) << uint8_t(1);
+		m << int64_t(1) << int32_t(1) << int16_t(1) << int8_t(1);
+		m << float(1.0f);
+		m << double(1.0);
+		m << bool(true);
+		m << std::string("test");
+	}
 }
 
 TEST_CASE("messages can be sent and received", "[message]") {
@@ -81,9 +122,9 @@ TEST_CASE("messages can be sent and received", "[message]") {
 
 	SECTION("can send and receive messages") {
 		nn::message send;
-		send << nn::part(256, 0);
+		send << uint32_t(1234);
 		REQUIRE(send.size() == 1);
-		REQUIRE(s1.sendmsg(std::move(send)) == 256);
+		REQUIRE(s1.sendmsg(std::move(send)));
 
 		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
 		REQUIRE(recv->size() == 1);
@@ -108,9 +149,9 @@ TEST_CASE("messages can be sent and received", "[message]") {
 	}
 //	SECTION("can send and receive multi-part messages") {
 //		nn::message send;
-//		send << nn::part(2048) << nn::part(2048);
+//		send << uint32_t(1234) << (5678);
 //		REQUIRE(send.size() == 2);
-//		REQUIRE(s1.sendmsg(std::move(send)) == 4096);
+//		REQUIRE_NOTHROW(s1.sendmsg(std::move(send)));
 //
 //		std::unique_ptr<nn::message> recv = s2.recvmsg(2);
 //		REQUIRE(recv->size() == 2);

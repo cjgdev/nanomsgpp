@@ -32,10 +32,16 @@ part::part(part&& other)
 	, d_size(other.d_size)
 {}
 
-part::part(void* ptr, size_t size)
-	: d_msg(ptr)
+part::part(const void* ptr, size_t size)
+	: d_msg(const_cast<void*>(ptr))
 	, d_size(size)
-{}
+{
+	if (size != NN_MSG) {
+		d_msg  = std::malloc(size);
+		d_size = size;
+		std::memcpy(d_msg, ptr, size);
+	}
+}
 
 part::part(size_t size, int type)
 	: d_msg(nn_allocmsg(size, type))
@@ -95,6 +101,12 @@ message&
 message::operator<<(part&& p) {
 	add_part(std::move(p));
 	return (*this);
+}
+
+template<>
+void message::write(const std::string& data) {
+	part p(data.size(), 0);
+	add_part(std::move(p));
 }
 
 msghdr_unique_ptr

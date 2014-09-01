@@ -102,7 +102,7 @@ input_options()
 {
 	boost::program_options::options_description options("Input Options");
 	options.add_options()
-		("format",   "use echo format")
+		("format",   bpo::value<std::string>(), "use echo format")
 		("raw",      "dump message as is")
 		("ascii,A",  "print ascii part of message delimeted by newline")
 		("quoted,Q", "print each message on separate line in double quotes with C-like character escaping")
@@ -195,16 +195,16 @@ process_command_line(int argc, char const* argv[]) {
 ostream& 
 show_usage(ostream& stream) {
 	stream << "nanomsgpp command line tool usage:" << endl;
-	stream << "  nanomsgpp req {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC] [-AQ]" << endl;
-	stream << "  nanomsgpp rep {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-AQ]" << endl;
-	stream << "  nanomsgpp push {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC]" << endl;
-	stream << "  nanomsgpp pull {--connect ADDR|--bind ADDR} [-AQ]" << endl;
-	stream << "  nanomsgpp pub {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC]" << endl;
-	stream << "  nanomsgpp sub {--connect ADDR|--bind ADDR} [--subscribe TOPIC ...] [-AQ]" << endl;
-	stream << "  nanomsgpp surveyor {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC] [-AQ]" << endl;
-	stream << "  nanomsgpp respondent {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-AQ]" << endl;
-	stream << "  nanomsgpp bus {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC] [-AQ]" << endl;
-	stream << "  nanomsgpp pair {--connect ADDR|--bind ADDR} {--data DATA|--file PATH} [-i SEC] [-AQ]" << endl;
+	stream << "  nanomsgpp req {--connect=ADDR|--bind=ADDR} {--data=DATA|--file=PATH} [-i SEC] [-AQ]" << endl;
+	stream << "  nanomsgpp rep {--connect=ADDR|--bind=ADDR} {--data=DATA|--file=PATH} [-AQ]" << endl;
+	stream << "  nanomsgpp push {--connect=ADDR|--bind=ADDR} {--data=DATA|--file=PATH} [-i SEC]" << endl;
+	stream << "  nanomsgpp pull {--connect=ADDR|--bind=ADDR} [-AQ]" << endl;
+	stream << "  nanomsgpp pub {--connect=ADDR|--bind=ADDR} {--data=DATA|--file=PATH} [-i SEC]" << endl;
+	stream << "  nanomsgpp sub {--connect=ADDR|--bind=ADDR} [--subscribe=TOPIC ...] [-AQ]" << endl;
+	stream << "  nanomsgpp surveyor {--connect=ADDR|--bind=ADDR} {--data=DATA|--file=PATH} [-i SEC] [-AQ]" << endl;
+	stream << "  nanomsgpp respondent {--connect=ADDR|--bind=ADDR} {--data=DATA|--file=PATH} [-AQ]" << endl;
+	stream << "  nanomsgpp bus {--connect=ADDR|--bind=ADDR} {--data=DATA|--file=PATH} [-i SEC] [-AQ]" << endl;
+	stream << "  nanomsgpp pair {--connect=ADDR|--bind=ADDR} {--data=DATA|--file=PATH} [-i SEC] [-AQ]" << endl;
 	return stream;
 }
 

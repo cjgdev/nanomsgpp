@@ -23,6 +23,7 @@
 #include "options.hpp"
 #include <nanomsgpp/nanomsgpp.hpp>
 #include <chrono>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -55,20 +56,77 @@ connect_socket(nn::socket& socket, const options& ops) {
 }
 
 void
+print_message_part(char* buf, int buflen, const options& ops)
+{
+	switch (ops.get_format()) {
+	case echo_format::none:
+		return;
+	case echo_format::raw:
+		fwrite (buf, 1, buflen, stdout);
+		break;
+	case echo_format::ascii:
+		for (; buflen > 0; --buflen, ++buf) {
+			if (isprint (*buf)) {
+				fputc (*buf, stdout);
+			} else {
+				fputc ('.', stdout);
+			}
+		}
+		fputc ('\n', stdout);
+		break;
+	case echo_format::quoted:
+		fputc ('"', stdout);
+		for (; buflen > 0; --buflen, ++buf) {
+			switch (*buf) {
+			case '\n':
+				fprintf (stdout, "\\n");
+				break;
+			case '\r':
+				fprintf (stdout, "\\r");
+				break;
+			case '\\':
+			case '\"':
+				fprintf (stdout, "\\%c", *buf);
+				break;
+			default:
+				if (isprint (*buf)) {
+					fputc (*buf, stdout);
+				} else {
+					fprintf (stdout, "\\x%02x", (unsigned char)*buf);
+				}
+			}
+		}
+		fprintf (stdout, "\"\n");
+		break;
+	case echo_format::msgpack:
+		if (buflen < 256) {
+			fputc ('\xc4', stdout);
+			fputc (buflen, stdout);
+			fwrite (buf, 1, buflen, stdout);
+		} else if (buflen < 65536) {
+			fputc ('\xc5', stdout);
+			fputc (buflen >> 8, stdout);
+			fputc (buflen & 0xff, stdout);
+			fwrite (buf, 1, buflen, stdout);
+		} else {
+			fputc ('\xc6', stdout);
+			fputc (buflen >> 24, stdout);
+			fputc ((buflen >> 16) & 0xff, stdout);
+			fputc ((buflen >> 8) & 0xff, stdout);
+			fputc (buflen & 0xff, stdout);
+			fwrite (buf, 1, buflen, stdout);
+		}
+		break;
+	}
+	fflush (stdout);
+}
+
+void
 print_message(std::unique_ptr<nn::message>& msg, const options& ops) {
 	for (auto& part : *msg) {
-		switch (ops.get_format()) {
-		case echo_format::none:
-			return;
-		case echo_format::raw:
-			break;
-		case echo_format::ascii:
-			break;
-		case echo_format::quoted:
-			break;
-		case echo_format::msgpack:
-			break;
-		}
+		char *buf    = static_cast<char*>((void*)part);
+		int   buflen = std::strlen(buf);
+		print_message_part(buf, buflen, ops);
 	}
 }
 
@@ -78,7 +136,7 @@ send_loop(nn::socket& socket, const options& ops) {
 	while (true) {
 		try {
 			nn::message m;
-			//m << data;
+			m << data;
 			socket.sendmsg(std::move(m));
 		} catch (nn::internal_exception &e) {
 			if (e.error() == EAGAIN) {
@@ -119,7 +177,7 @@ rw_loop(nn::socket& socket, const options& ops) {
 	while (true) {
 		try {
 			nn::message m;
-			//m << data;
+			m << data;
 			socket.sendmsg(std::move(m));
 		} catch (nn::internal_exception &e) {
 			if (e.error() == EAGAIN) {
@@ -163,7 +221,7 @@ resp_loop(nn::socket& socket, const options& ops) {
 		}
 		try {
 			nn::message m;
-			//m << data;
+			m << data;
 			socket.sendmsg(std::move(m));
 		} catch (nn::internal_exception &e) {
 			if (e.error() == EAGAIN) {

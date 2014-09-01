@@ -46,13 +46,17 @@ namespace nanomsgpp {
 		// move constructor
 		part(part&& other);
 
-		// construct from pointer and size
-		part(void* ptr, size_t size);
+		// construct from pointer and size. specify a pointer to existing memory and a size
+		// and the constructor will copy the data to a malloc'd internal buffer. otherwise
+		// specify a nullptr and NN_MSG size to create a placeholder part for receiving
+		// messages
+		part(const void* ptr, size_t size);
 
-		// construct from size and type, will allocate (nn_allocmsg)
+		// construct from size and type, will allocate (nn_allocmsg), used for creating
+		// zero-copy messages
 		part(size_t size, int type);
 
-		// construct from size, will allocate (malloc)
+		// construct from size, will allocate (malloc), used for creating multi-part messages
 		part(size_t size);
 
 		// destructor
@@ -63,6 +67,10 @@ namespace nanomsgpp {
 
 		// cast to void* operator
 		operator void*() { return &d_msg; }
+
+		// convenience method to return the data as a pointer to the given type
+		template<typename T>
+		T* as() { return static_cast<T*>(d_msg); }
 
 		// get size of memory pointed to d_msg
 		size_t size() const { return d_size; }
@@ -103,6 +111,12 @@ namespace nanomsgpp {
 		// stream operator add message part
 		message& operator<<(part&& p);
 
+		template<typename T>
+		void write(const T& data);
+
+		template<typename T>
+		message& operator<<(const T& data);
+
 		// generate a nn_msghdr from d_parts
 		msghdr_unique_ptr gen_nn_msghdr();
 
@@ -127,6 +141,22 @@ namespace nanomsgpp {
 		// transfer ownership of message
 		void release();
 	};
+
+	// INLINE FUNCTION DEFINITIONS
+
+	template<typename T>
+	void message::write(const T& data) {
+		add_part(part(&data, sizeof(T)));
+	}
+
+	template<>
+	void message::write(const std::string& data);
+
+	template<typename T>
+	message& message::operator<<(const T& data) {
+		write(data);
+		return (*this);
+	}
 
 }
 
