@@ -166,18 +166,16 @@ std::unique_ptr<message>
 socket::recvmsg(size_t n_parts, bool dont_wait) {
 	struct nn_msghdr hdr;
 	struct nn_iovec iov[n_parts];
-	parts msgparts;
+	void* buf[n_parts];
 
 	size_t buf_size = (1 == n_parts) ? NN_MSG : 2048;
+
 	for (int i = 0; i < n_parts; ++i) {
-		if (1 == n_parts) {
-			msgparts.push_back(part(nullptr, NN_MSG));
-		} else {
-			msgparts.push_back(part(buf_size));
+		if (buf_size != NN_MSG) {
+			buf[i] = malloc(buf_size);
 		}
-		iov[i].iov_len = buf_size;
-		iov[i].iov_base = static_cast<void*>
-			(msgparts.back());
+		iov[i].iov_len  = buf_size;
+		iov[i].iov_base = &buf[i];
 	}
 
 	std::memset(&hdr, 0, sizeof(hdr));
@@ -187,6 +185,19 @@ socket::recvmsg(size_t n_parts, bool dont_wait) {
 	int nb = nn_recvmsg(d_socket, &hdr, (dont_wait) ? NN_DONTWAIT : 0);
 	if (-1 == nb) {
 		throw internal_exception();
+	}
+
+	parts msgparts;
+	for (int i = 0; i < n_parts; ++i) {
+		if (1 == n_parts) {
+			msgparts.push_back(part(*(void**)buf[i], nb, true));
+			int rc = nn_freemsg(buf[i]); // TODO: free me in part destructor?
+			if (-1 == rc) {
+				throw internal_exception();
+			}
+		} else {
+			msgparts.push_back(part(*(void**)buf[i], buf_size, true)); // TODO: size should be NN_MSG?
+		}
 	}
 
 	return std::unique_ptr<message>

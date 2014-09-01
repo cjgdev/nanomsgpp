@@ -30,19 +30,19 @@ namespace nn = nanomsgpp;
 TEST_CASE("message parts can be manipulated", "[message]") {
 	SECTION("construct with int pointer and size") {
 		uint32_t i = 1234;
-		nn::part p(reinterpret_cast<const void*>(&i), sizeof(i));
+		nn::part p(reinterpret_cast<void*>(&i), sizeof(i));
 		REQUIRE(*(p.as<uint32_t>()) == i);
 		REQUIRE(p.size() == sizeof(i));
 	}
 	SECTION("construct with float pointer and size") {
 		float f = 1.0f;
-		nn::part p(reinterpret_cast<const void*>(&f), sizeof(f));
+		nn::part p(reinterpret_cast<void*>(&f), sizeof(f));
 		REQUIRE(*(p.as<float>()) == f);
 		REQUIRE(p.size() == sizeof(f));
 	}
 	SECTION("construct with string pointer and size") {
 		std::string s("test");
-		nn::part p(reinterpret_cast<const void*>(s.c_str()), s.size());
+		nn::part p((void*)s.c_str(), s.size());
 		REQUIRE(std::string(p.as<char>()) == s);
 		REQUIRE(p.size() == s.size());
 	}
@@ -52,7 +52,7 @@ TEST_CASE("message parts can be manipulated", "[message]") {
 			uint32_t b;
 		};
 		data_t data = { 1234, 5678 };
-		nn::part p(reinterpret_cast<const void*>(&data), sizeof(data));
+		nn::part p(reinterpret_cast<void*>(&data), sizeof(data));
 		REQUIRE(p.as<data_t>()->a == 1234);
 		REQUIRE(p.as<data_t>()->b == 5678);
 		REQUIRE(p.size() == sizeof(data));
@@ -128,6 +128,8 @@ TEST_CASE("messages can be sent and received", "[message]") {
 
 		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
 		REQUIRE(recv->size() == 1);
+		uint32_t* rd = recv->at(0).as<uint32_t>();
+		REQUIRE(*rd == 1234);
 	}
 	SECTION("can send and receive raw") {
 		unsigned char *buf1, *buf2;

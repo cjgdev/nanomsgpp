@@ -42,6 +42,7 @@ namespace nanomsgpp {
 	class part {
 		void*  d_msg;
 		size_t d_size;
+		bool   d_malloc;
 	public:
 		// move constructor
 		part(part&& other);
@@ -50,7 +51,7 @@ namespace nanomsgpp {
 		// and the constructor will copy the data to a malloc'd internal buffer. otherwise
 		// specify a nullptr and NN_MSG size to create a placeholder part for receiving
 		// messages
-		part(const void* ptr, size_t size);
+		part(const void* ptr, size_t size, bool deep_copy = true);
 
 		// construct from size and type, will allocate (nn_allocmsg), used for creating
 		// zero-copy messages

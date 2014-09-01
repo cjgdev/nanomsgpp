@@ -30,13 +30,15 @@ using namespace nanomsgpp;
 part::part(part&& other)
 	: d_msg(other.release())
 	, d_size(other.d_size)
+	, d_malloc(other.d_malloc)
 {}
 
-part::part(const void* ptr, size_t size)
+part::part(const void* ptr, size_t size, bool deep_copy)
 	: d_msg(const_cast<void*>(ptr))
 	, d_size(size)
+	, d_malloc(deep_copy)
 {
-	if (size != NN_MSG) {
+	if (deep_copy) {
 		d_msg  = std::malloc(size);
 		d_size = size;
 		std::memcpy(d_msg, ptr, size);
@@ -46,16 +48,18 @@ part::part(const void* ptr, size_t size)
 part::part(size_t size, int type)
 	: d_msg(nn_allocmsg(size, type))
 	, d_size(NN_MSG)
+	, d_malloc(false)
 {}
 
 part::part(size_t size)
 	: d_msg(std::malloc(sizeof(char) * size))
 	, d_size(size)
+	, d_malloc(true)
 {}
 
 part::~part() {
 	if (d_msg != nullptr) {
-		if (d_size == NN_MSG) {
+		if (!d_malloc) {
 			int result = nn_freemsg(d_msg);
 			if (-1 == result) {
 				throw internal_exception();
@@ -69,7 +73,9 @@ part::~part() {
 
 part&
 part::operator=(part &&other) {
-	d_msg = other.release();
+	d_msg    = other.release();
+	d_size   = other.d_size;
+	d_malloc = other.d_malloc;
 	return (*this);
 }
 

@@ -59,7 +59,7 @@ bool
 poller::has_event(socket& s, poll_event e) {
 	for (auto& pfd : d_pollfds) {
 		if (pfd.fd == s.get_fd()) {
-			return (pfd.revents & (short)e);
+			return ((pfd.revents & (short)e) != 0);
 		}
 	}
 	return (false);
