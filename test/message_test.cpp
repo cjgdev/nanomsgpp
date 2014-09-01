@@ -124,12 +124,23 @@ TEST_CASE("messages can be sent and received", "[message]") {
 		nn::message send;
 		send << uint32_t(1234);
 		REQUIRE(send.size() == 1);
-		REQUIRE(s1.sendmsg(std::move(send)));
+		REQUIRE(s1.sendmsg(std::move(send)) == 4);
 
 		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
 		REQUIRE(recv->size() == 1);
 		uint32_t* rd = recv->at(0).as<uint32_t>();
 		REQUIRE(*rd == 1234);
+	}
+	SECTION("can send and receive string messages") {
+		nn::message send;
+		send << "test";
+		REQUIRE(send.size() == 1);
+		REQUIRE(s1.sendmsg(std::move(send)) == 4);
+
+		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
+		REQUIRE(recv->size() == 1);
+		std::string rd(recv->at(0).as<char>());
+		REQUIRE(rd == "test");
 	}
 	SECTION("can send and receive raw") {
 		unsigned char *buf1, *buf2;

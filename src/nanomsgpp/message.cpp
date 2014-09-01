@@ -111,7 +111,7 @@ message::operator<<(part&& p) {
 
 template<>
 void message::write(const std::string& data) {
-	part p(data.size(), 0);
+	part p(data.c_str(), data.size(), true);
 	add_part(std::move(p));
 }
 

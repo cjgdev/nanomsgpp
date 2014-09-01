@@ -249,6 +249,7 @@ int main(int argc, char const* argv[]) {
 	try {
 		nn::socket socket(nn::socket_domain::sp, ops.get_type());
 		configure_socket(socket, ops);
+		connect_socket(socket, ops);
 		if (ops.delay != -1) {
 			std::this_thread::sleep_for(std::chrono::seconds(ops.delay));
 		}
