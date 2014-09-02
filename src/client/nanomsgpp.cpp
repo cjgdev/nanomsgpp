@@ -124,7 +124,7 @@ print_message_part(char* buf, int buflen, const options& ops)
 void
 print_message(std::unique_ptr<nn::message>& msg, const options& ops) {
 	for (auto& part : *msg) {
-		char *buf    = static_cast<char*>((void*)part);
+		char *buf    = part.as<char>();
 		int   buflen = std::strlen(buf);
 		print_message_part(buf, buflen, ops);
 	}
