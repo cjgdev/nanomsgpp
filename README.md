@@ -1,34 +1,80 @@
-libnanomsgpp - C++ bindings for nanomsg
-=======================================
+# nanomsgpp (C++)
 
-`libnanomsgpp` is a portable, pure C++ wrapper around nanomsg.
+## Introduction
 
-`libnanomsgpp` is licensed under the MIT license. Please see
-the [separate license](COPYING) for more information.
+C++ client library for [nanomsg](https://github.com/nanomsg/nanomsg).
 
-* Website: [libnanomsgpp.github.com](http://libnanomsgpp.github.com)
-* StackOverflow Tag: [libnanomsgpp](http://stackoverflow.com/questions/tagged/libnanomsgpp)
-* Issues: [GitHub Issues](https://github.com/libnanomsgpp/libnanomsgpp/issues) (Right here!)
+## Installation
 
-What It Can Do
-==============
+The library uses autotools. Use the following commands to build and install libnanomsgpp:
 
-Building libnanomsgpp - Using CMake
-===================================
+```bash
+$ git clone git://github.com/bigdatadev/libnanomsgpp.git
+$ cd libnanomsgpp
+$ ./autogen.sh
+$ ./configure && make && make check && make install
+```
 
-`libnanomsgpp` builds cleanly on most platforms without any external dependencies.
+## Getting Started
 
-Compiler and linker options
----------------------------
+Create a socket and bind to a port:
 
-CMake lets you specify a few variables to control the behavior of the
-compiler and linker. These flags are rarely used but can be useful for
-64-bit to 32-bit cross-compilation.
+```cpp
+#include <nanomsgpp/nanomsgpp.hpp>
 
-- `CMAKE_C_FLAGS`: Set your own compiler flags
-- `CMAKE_FIND_ROOT_PATH`: Override the search path for libraries
+namespace nn = nanomsgpp;
 
-License
-=======
+int main() {
+	try {
+		nn::socket socket(nn::socket_domain::sp, nn::socket_type::reply);
+		socket.bind("tcp://127.0.0.1:1234");
+	} catch (nn::internal_exception &e) {
+		std::cerr << "Error: " << e.error() << " - " << e.reason() << "." << std::endl;
+		exit (EXIT_FAILURE);
+	}
+	return (EXIT_SUCCESS);
+}
+```
 
-`libnanomsgpp` is licensed under the MIT license.
+Send a message:
+
+```cpp
+nn::message message;
+message << "Hello, world!";
+socket.sendmsg(message);
+```
+
+Receive a message:
+
+```cpp
+std::unique_ptr<nn::message> recv;
+socket.recvmsg(1);
+
+// print each message part
+for (auto& part : recv) {
+	std::cout << part.as<char>() << std::endl;
+}
+```
+
+For more examples, refer to the following resources:
+* [Tests](test/)
+* [API Documentation](docs/API.md)
+* [Command-Line Client](src/client/) - [Manual](docs/Client.md)
+
+## Contributing
+
+Just send me a pull request. Please take a look at the project issues and see how you can help. Here are some tips:
+* please add more tests.
+* please check your syntax.
+
+## Author
+
+Christopher Gilbert
+
+* Web: [http://cjgilbert.me](http://cjgilbert.me)
+* Twitter: [@bigdatadev](https://twitter.com/bigdatadev)
+* Linkedin: [/in/christophergilbert](https://www.linkedin.com/in/christophergilbert)
+
+## Copyright
+
+See [LICENSE](LICENSE) document
