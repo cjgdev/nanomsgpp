@@ -166,13 +166,15 @@ std::unique_ptr<message>
 socket::recvmsg(size_t n_parts, bool dont_wait) {
 	struct nn_msghdr hdr;
 	struct nn_iovec iov[n_parts];
-	void* buf[n_parts];
+	unsigned char* buf[n_parts];
 
 	size_t buf_size = (1 == n_parts) ? NN_MSG : 2048;
 
 	for (int i = 0; i < n_parts; ++i) {
 		if (buf_size != NN_MSG) {
-			buf[i] = malloc(buf_size);
+			buf[i] = static_cast<unsigned char*>(malloc(buf_size));
+		} else {
+			buf[i] = NULL;
 		}
 		iov[i].iov_len  = buf_size;
 		iov[i].iov_base = &buf[i];
@@ -190,7 +192,7 @@ socket::recvmsg(size_t n_parts, bool dont_wait) {
 	parts msgparts;
 	for (int i = 0; i < n_parts; ++i) {
 		if (1 == n_parts) {
-			msgparts.push_back(part(*(void**)buf[i], nb, true));
+			msgparts.push_back(part(buf[i], nb, true));
 			int rc = nn_freemsg(buf[i]); // TODO: free me in part destructor?
 			if (-1 == rc) {
 				throw internal_exception();

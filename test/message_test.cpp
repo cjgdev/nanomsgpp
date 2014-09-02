@@ -120,28 +120,6 @@ TEST_CASE("messages can be sent and received", "[message]") {
 	nn::socket s2(nn::socket_domain::sp, nn::socket_type::pair);
 	REQUIRE_NOTHROW(s2.connect("inproc://test"));
 
-	SECTION("can send and receive messages") {
-		nn::message send;
-		send << uint32_t(1234);
-		REQUIRE(send.size() == 1);
-		REQUIRE(s1.sendmsg(std::move(send)) == 4);
-
-		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
-		REQUIRE(recv->size() == 1);
-		uint32_t* rd = recv->at(0).as<uint32_t>();
-		REQUIRE(*rd == 1234);
-	}
-	SECTION("can send and receive string messages") {
-		nn::message send;
-		send << "test";
-		REQUIRE(send.size() == 1);
-		REQUIRE(s1.sendmsg(std::move(send)) == 4);
-
-		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
-		REQUIRE(recv->size() == 1);
-		std::string rd(recv->at(0).as<char>());
-		REQUIRE(rd == "test");
-	}
 	SECTION("can send and receive raw") {
 		unsigned char *buf1, *buf2;
 
@@ -159,6 +137,51 @@ TEST_CASE("messages can be sent and received", "[message]") {
 			REQUIRE(static_cast<unsigned char>(i) == buf2[i]);
 
 		nn_freemsg(buf2);
+	}
+	SECTION("can send raw and receive message") {
+		unsigned char *buf1;
+		buf1 = static_cast<unsigned char*>
+			(nn_allocmsg(4, 0));
+		*reinterpret_cast<uint32_t*>(buf1) = 1234;
+		REQUIRE_NOTHROW(s1.send_raw(&buf1, NN_MSG, 0));
+
+		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
+		REQUIRE(recv->size() == 1);
+		uint32_t* rd = recv->at(0).as<uint32_t>();
+		REQUIRE(*rd == 1234);
+	}
+	SECTION("can send message and receive raw") {
+		nn::message send;
+		send << uint32_t(1234);
+		REQUIRE(send.size() == 1);
+		REQUIRE(s1.sendmsg(std::move(send)) == 4);
+
+		unsigned char *buf2;
+		buf2 = nullptr;
+		REQUIRE_NOTHROW(s2.recv_raw(&buf2, NN_MSG, 0));
+		REQUIRE(*reinterpret_cast<uint32_t*>(buf2) == 1234);
+		nn_freemsg(buf2);
+	}
+	SECTION("can send and receive messages") {
+		nn::message send;
+		send << uint32_t(1234);
+		REQUIRE(send.size() == 1);
+		REQUIRE(s1.sendmsg(std::move(send)) == 4);
+
+		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
+		REQUIRE(recv->size() == 1);
+		uint32_t* rd = recv->at(0).as<uint32_t>();
+		REQUIRE(*rd == 1234);
+	}
+	SECTION("can send and receive string messages") {
+		nn::message send;
+		send << "test";
+		REQUIRE(send.size() == 1);
+		REQUIRE(s1.sendmsg(std::move(send)) == 5);
+
+		std::unique_ptr<nn::message> recv = s2.recvmsg(1);
+		REQUIRE(recv->size() == 1);
+		REQUIRE(std::string(recv->at(0).as<char>()) == "test");
 	}
 //	SECTION("can send and receive multi-part messages") {
 //		nn::message send;

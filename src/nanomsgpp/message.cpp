@@ -123,7 +123,8 @@ message::gen_nn_msghdr() {
 		(std::malloc(sizeof(nn_iovec) * d_parts.size()));
 	int i = 0;
 	for (auto& p : d_parts) {
-		iov[i].iov_base = static_cast<void*>(p);
+		void* ptr = p.as<void>();
+		iov[i].iov_base = ptr;
 		iov[i].iov_len = p.size();
 		i++;
 	}
