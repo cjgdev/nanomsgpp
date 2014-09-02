@@ -30,15 +30,21 @@
 
 namespace nanomsgpp {
 
+	// The base exception class for all nanomsgpp exceptions.
 	class exception : public std::runtime_error {
 	public:
 		exception(std::string const& message)
 			: std::runtime_error(message) {}
 	};
 
+	// The internal_exception class encapsulates errors caused by calls to
+	// the nanomsg client library that return an error code. These errors are
+	// identified by their error code given by nn_errno, and their associated
+	// reason string deduced by nn_strerror.
 	class internal_exception : public exception {
 		int         d_error;
 		std::string d_reason;
+		
 	public:
 		// Default constructor.
 		internal_exception()

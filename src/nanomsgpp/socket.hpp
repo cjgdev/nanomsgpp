@@ -40,59 +40,83 @@
 
 namespace nanomsgpp {
 
+	// Sockets are used to establish nanomsg connections via TCP or IPC. Sockets must be initialised
+	// with parameters to describe their domain and protocol.
 	class socket {
 		int                        d_socket;
 		std::map<std::string, int> d_endpoints;
 
 	public:
+		// Move constructor.
 		socket(socket &&other);
 
+		// Initialise a socket with an existing socket file descriptor.
 		explicit socket(int socket);
 
+		// Initialise a socket with a domain and a type.
 		explicit socket(socket_domain domain, socket_type type);
 
+		// Destructor.
 		~socket();
 
+		// Move assignment operator
 		socket& operator=(socket &&other);
 
+		// MANIPULATORS
+
+		// Get the socket file descriptor.
 		int get_fd() const { return d_socket; }
 
+		// Send messages, setting dont_wait to false will cause the call to block.
 		int sendmsg(message&& msg, bool dont_wait = true);
 
+		// Stream message send operator.
 		socket& operator<<(message&& msg);
 
+		// Send a raw message buffer allocated by the user.
 		int send_raw(const void *buf, size_t len, int flags);
 
+		// Receive a message.
 		std::unique_ptr<message> recvmsg(size_t n_parts, bool dont_wait = true);
 
+		// Stream message receive operator.
 		socket& operator>>(std::unique_ptr<message> &m);
 
+		// Receive a raw message.
 		int recv_raw(void *buf, size_t len, int flags);
 
+		// Set a socket option.
 		void set_option(int level, socket_option opt, int val);
 
+		// Set a socket option.
 		void set_option(int level, socket_option opt, const std::string &val);
 
+		// Set a socket option raw.
 		void set_option_raw(int level, int option, const void *val, size_t len);
 
+		// Get a socket option.
 		template<typename T>
 		T get_option(int level, socket_option opt);
 
+		// Get a socket option raw.
 		void get_option_raw(int level, int option, void *val, size_t *len);
 
+		// Bind to the given address.
 		void bind(const std::string &addr);
 
+		// Connect to the given address.
 		void connect(const std::string &addr);
 
+		// Unbind / Disconnect from the given address.
 		void shutdown(const std::string &addr);
 
+		// Close the socket.
 		void close();
 
 	private:
+		// NOT IMPLEMENTED
 		socket() = delete;
-
 		socket(const socket &other) = delete;
-
 		socket& operator=(const socket &other) = delete;
 	};
 

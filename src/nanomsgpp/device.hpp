@@ -29,10 +29,15 @@
 
 namespace nanomsgpp {
 
+	// A device is used to forward messages between two sockets. If only one socket is valid, the
+	// device works in a loopback mode, where any messages received from the socket are sent back
+	// to itself
 	class device {
 	public:
+		// construct a device from socket a and socket b
 		device(socket& a, socket& b);
 
+		// destructor
 		~device() {};
 
 	private:

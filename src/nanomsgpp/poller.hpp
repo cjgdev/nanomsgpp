@@ -30,25 +30,40 @@
 namespace nanomsgpp {
 
 	enum class poll_event {
+		// Check whether at least one message can be received from the fd socket without blocking. 
 		in     = NN_POLLIN,
+
+		// Check whether at least one message can be sent to the fd socket without blocking. 
 		out    = NN_POLLOUT,
+
+		// Combination of NN_POLLIN and NN_POLLOUT.
 		in_out = NN_POLLIN | NN_POLLOUT,
 	};
 
+	// The poller checks a set of SP sockets and reports whether it's possible to send a message to
+	// the socket and / or receive a message from each socket.
 	class poller {
 		std::vector<nn_pollfd> d_pollfds;
 
 	public:
+		// Default constructor.
 		poller();
 
+		// Destructor.
 		~poller() {};
 
+		// MANIPULATORS
+
+		// Add a socket with the given event to poll for.
 		void add_socket(socket& s, poll_event e);
 
+		// Remove a socket from the internal list of file descriptors.
 		void remove_socket(socket& s);
 
+		// Poll for events.
 		bool poll(int timeout = -1);
 
+		// Check whether a given event exists.
 		bool has_event(socket& s, poll_event e);
 	};
 

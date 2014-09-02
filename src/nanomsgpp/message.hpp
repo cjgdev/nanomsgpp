@@ -30,19 +30,21 @@
 
 namespace nanomsgpp {
 
+	// A custom deleter for freeing memory allocated for nn_msghdr.
 	struct msghdr_free {
 		void operator()(void* x) {
 			std::free(static_cast<nn_msghdr*>(x)->msg_iov);
 			std::free(x);
 		}
 	};
-
 	typedef std::unique_ptr<nn_msghdr, msghdr_free> msghdr_unique_ptr;
 
+	// A part represents a message buffer, which is either allocated using nn_allocmsg or malloc.
 	class part {
 		void*  d_msg;
 		size_t d_size;
 		bool   d_malloc;
+
 	public:
 		// move constructor
 		part(part&& other);
@@ -66,6 +68,8 @@ namespace nanomsgpp {
 		// move assignment operator
 		part& operator=(part &&other);
 
+		// MANIPULATORS
+
 		// cast to void* operator
 		operator void*() { return &d_msg; }
 
@@ -80,20 +84,26 @@ namespace nanomsgpp {
 		void* release();
 
 	private:
-		// not implemented
+		// NOT IMPLEMENTED
 		part(const part& other) = delete;
 		part& operator=(const part &other) = delete;
 	};
 
 	typedef std::vector<part> parts;
 
+	// Messages are used to transfer data and events via sockets. Messages are comprised of one or
+	// more parts.
 	class message {
-		parts                      d_parts;
+		parts d_parts;
+
 	public:
+		// default constructor
 		message();
 
+		// copy constructor
 		message(const message &other) = default;
 
+		// move constructor
 		message(message &&other) = default;
 
 		// construct from parts
@@ -102,9 +112,13 @@ namespace nanomsgpp {
 		// destructor
 		~message();
 
+		// copy assignment operator
 		message& operator=(const message &other) = default;
 
+		// move assignment operator
 		message& operator=(message &&other) = default;
+
+		// MANIPULATORS
 
 		// add a new part to the message
 		void add_part(part&& p);
@@ -112,9 +126,11 @@ namespace nanomsgpp {
 		// stream operator add message part
 		message& operator<<(part&& p);
 
+		// generic write method, will add a message part initialised with a copy of the data parameter
 		template<typename T>
 		void write(const T& data);
 
+		// generic stream write operator
 		template<typename T>
 		message& operator<<(const T& data);
 
