@@ -65,11 +65,18 @@ string
 options::get_data() const {
 	if (!data.empty()) { return std::string(data); }
 	if (!file.empty()) {
-		ifstream f(file);
-		return string(
-				istreambuf_iterator<char>(f),
-				istreambuf_iterator<char>()
-		);
+		if (file == "-") {
+			return string(
+					istream_iterator<char>(cin),
+					istream_iterator<char>()
+			);
+		} else {
+			ifstream f(file);
+			return string(
+					istreambuf_iterator<char>(f),
+					istreambuf_iterator<char>()
+			);
+		}
 	}
 	return string("");
 }
