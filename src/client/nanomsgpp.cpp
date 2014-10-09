@@ -242,7 +242,8 @@ int main(int argc, char const* argv[]) {
 	if (ops.show_usage || ops.show_help) {
 		show_usage(cout);
 		if (ops.show_help) {
-			cout << endl << show_help(cout);
+			cout << endl;
+			show_help(cout);
 		}
 		return EXIT_FAILURE;
 	}
